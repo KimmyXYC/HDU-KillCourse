@@ -38,5 +38,27 @@
         "to": "...@qq.com",
         "enabled": "0"
     },
+    "telegram": {
+        "bot_token": "",
+        "chat_id": "",
+        "api_base": "https://api.telegram.org",
+        "enabled": "0"
+    },
+    "bark": {
+        "server": "https://api.day.app",
+        "key": "",
+        "sound": "",
+        "group": "",
+        "url": "",
+        "icon": "",
+        "enabled": "0"
+    },
+    "webhook": {
+        "url": "",
+        "method": "POST",
+        "headers": {},
+        "body_template": "{\"title\":\"{{.Title}}\",\"body\":\"{{.Body}}\"}",
+        "enabled": "0"
+    },
     "start_time": "2024-07-25 12:00:00"
 }

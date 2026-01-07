@@ -49,6 +49,9 @@ type WebConfig struct {
 	Course     [][]string        `json:"course"` // 使用二维数组列表来存储课程信息
 	WaitCourse config.WaitCourse `json:"wait_course"`
 	SmtpEmail  config.SmtpEmail  `json:"smtp_email"`
+	Telegram   config.Telegram   `json:"telegram"`
+	Bark       config.Bark       `json:"bark"`
+	Webhook    config.Webhook    `json:"webhook"`
 	StartTime  string            `json:"start_time"`
 }
 
@@ -97,6 +100,9 @@ func StartWebServer() {
 			Course:     courseArray,
 			WaitCourse: cfg.WaitCourse,
 			SmtpEmail:  cfg.SmtpEmail,
+			Telegram:   cfg.Telegram,
+			Bark:       cfg.Bark,
+			Webhook:    cfg.Webhook,
 			StartTime:  cfg.StartTime,
 		}
 		w.Header().Set("Content-Type", "application/json")
@@ -120,6 +126,9 @@ func StartWebServer() {
 		cfg.Course = courseMap
 		cfg.WaitCourse = webCfg.WaitCourse
 		cfg.SmtpEmail = webCfg.SmtpEmail
+		cfg.Telegram = webCfg.Telegram
+		cfg.Bark = webCfg.Bark
+		cfg.Webhook = webCfg.Webhook
 		cfg.StartTime = webCfg.StartTime
 		// 验证配置
 		err = cfg.Validate()

@@ -18,6 +18,9 @@ type Config struct {
 	Course                  *orderedmap.OrderedMap `json:"course"`
 	WaitCourse              `json:"wait_course"`
 	SmtpEmail               `json:"smtp_email"`
+	Telegram                `json:"telegram"`
+	Bark                    `json:"bark"`
+	Webhook                 `json:"webhook"`
 	StartTime               string `json:"start_time"`
 	ClientBodyConfigEnabled string `json:"ClientBodyConfigEnabled,omitempty"`
 	CrossGradeEnabled       string `json:"CrossGradeEnabled,omitempty"`
@@ -64,6 +67,34 @@ type SmtpEmail struct {
 	Password string `json:"password"`
 	To       string `json:"to"`
 	Enabled  string `json:"enabled"`
+}
+
+// Telegram Telegram 推送配置
+type Telegram struct {
+	BotToken string `json:"bot_token"`
+	ChatID   string `json:"chat_id"`
+	ApiBase  string `json:"api_base"`
+	Enabled  string `json:"enabled"`
+}
+
+// Bark Bark 推送配置
+type Bark struct {
+	Server  string `json:"server"`
+	Key     string `json:"key"`
+	Sound   string `json:"sound"`
+	Group   string `json:"group"`
+	URL     string `json:"url"`
+	Icon    string `json:"icon"`
+	Enabled string `json:"enabled"`
+}
+
+// Webhook 自定义 Webhook 推送配置
+type Webhook struct {
+	Url          string            `json:"url"`
+	Method       string            `json:"method"`
+	Headers      map[string]string `json:"headers"`
+	BodyTemplate string            `json:"body_template"`
+	Enabled      string            `json:"enabled"`
 }
 
 func InitCfg() (*Config, error) {
@@ -126,6 +157,28 @@ var DefaultConfig = `{
         "to": "...@qq.com",
         "enabled": "0"
     },
+    "telegram": {
+        "bot_token": "",
+        "chat_id": "",
+        "api_base": "https://api.telegram.org",
+        "enabled": "0"
+    },
+    "bark": {
+        "server": "https://api.day.app",
+        "key": "",
+        "sound": "",
+        "group": "",
+        "url": "",
+        "icon": "",
+        "enabled": "0"
+    },
+    "webhook": {
+        "url": "",
+        "method": "POST",
+        "headers": {},
+        "body_template": "{\"title\":\"{{.Title}}\",\"body\":\"{{.Body}}\"}",
+        "enabled": "0"
+    },
     "start_time": "2024-07-25 12:00:00"
 }`
 
@@ -181,6 +234,21 @@ func (cfg *Config) Validate() error {
 			return errors.New("SmtpEmail为空")
 		}
 	}
+	if cfg.Telegram.Enabled == "1" {
+		if cfg.Telegram.BotToken == "" || cfg.Telegram.ChatID == "" {
+			return errors.New("Telegram为空")
+		}
+	}
+	if cfg.Bark.Enabled == "1" {
+		if cfg.Bark.Key == "" {
+			return errors.New("Bark为空")
+		}
+	}
+	if cfg.Webhook.Enabled == "1" {
+		if cfg.Webhook.Url == "" {
+			return errors.New("Webhook为空")
+		}
+	}
 	if cfg.WaitCourse.Enabled == "1" {
 		if cfg.StartTime == "" {
 			return errors.New("StartTime为空")
@@ -218,6 +286,36 @@ func (cfg *Config) PrintConfig() {
 		log.Info("  To: ", cfg.SmtpEmail.To)
 	} else {
 		log.Info("  SmtpEmailEnabled: ", cfg.SmtpEmail.Enabled)
+	}
+
+	log.Info(log.InfoColor("Telegram:"))
+	if cfg.Telegram.Enabled == "1" {
+		log.Info("  BotToken: ", cfg.Telegram.BotToken)
+		log.Info("  ChatID: ", cfg.Telegram.ChatID)
+		log.Info("  ApiBase: ", cfg.Telegram.ApiBase)
+	} else {
+		log.Info("  TelegramEnabled: ", cfg.Telegram.Enabled)
+	}
+
+	log.Info(log.InfoColor("Bark:"))
+	if cfg.Bark.Enabled == "1" {
+		log.Info("  Server: ", cfg.Bark.Server)
+		log.Info("  Key: ", cfg.Bark.Key)
+		log.Info("  Sound: ", cfg.Bark.Sound)
+		log.Info("  Group: ", cfg.Bark.Group)
+		log.Info("  URL: ", cfg.Bark.URL)
+		log.Info("  Icon: ", cfg.Bark.Icon)
+	} else {
+		log.Info("  BarkEnabled: ", cfg.Bark.Enabled)
+	}
+
+	log.Info(log.InfoColor("Webhook:"))
+	if cfg.Webhook.Enabled == "1" {
+		log.Info("  Url: ", cfg.Webhook.Url)
+		log.Info("  Method: ", cfg.Webhook.Method)
+		log.Info("  Headers: ", cfg.Webhook.Headers)
+	} else {
+		log.Info("  WebhookEnabled: ", cfg.Webhook.Enabled)
 	}
 	log.Info(log.InfoColor("StartTime: "), cfg.StartTime)
 	log.Info(log.InfoColor("Course:"))

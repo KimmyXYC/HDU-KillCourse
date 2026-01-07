@@ -89,6 +89,28 @@ go build
         "to": "...@qq.com", //接收邮件的邮箱
         "enabled": "0" //是否开启邮件通知
     },
+    "telegram": { //Telegram通知
+        "bot_token": "", //BotFather 获取
+        "chat_id": "", //目标会话ID（可为个人/群组）
+        "api_base": "https://api.telegram.org", //可选：自建/代理
+        "enabled": "0" //是否开启Telegram通知
+    },
+    "bark": { //Bark通知（iOS）
+        "server": "https://api.day.app", //可选：自建Bark服务器
+        "key": "", //Bark Key
+        "sound": "", //可选
+        "group": "", //可选
+        "url": "", //可选：点击跳转
+        "icon": "", //可选
+        "enabled": "0" //是否开启Bark通知
+    },
+    "webhook": { //自定义Webhook通知
+        "url": "", //Webhook地址
+        "method": "POST", //默认POST
+        "headers": {}, //可选：自定义请求头
+        "body_template": "{\"title\":\"{{.Title}}\",\"body\":\"{{.Body}}\"}", //支持 {{.Title}}/{{.Body}}/{{.Time}}
+        "enabled": "0" //是否开启Webhook通知
+    },
     "start_time": "2024-07-25 12:00:00",//程序开始时间
 }
 ```

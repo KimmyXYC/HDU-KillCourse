@@ -9,7 +9,7 @@ import (
 	"github.com/cr4n5/HDU-KillCourse/config"
 	"github.com/cr4n5/HDU-KillCourse/log"
 	"github.com/cr4n5/HDU-KillCourse/pkg/login"
-	"github.com/cr4n5/HDU-KillCourse/util"
+	"github.com/cr4n5/HDU-KillCourse/pkg/notify"
 )
 
 // StartWaitCourse 开始蹲课
@@ -39,7 +39,7 @@ func StartWaitCourse(ctx context.Context, c *client.Client, cfg *config.Config, 
 				waitCourseChannel <- "登录过期"
 				return
 			}
-			SendEmail(cfg, "查询失败", CourseName+"查询失败,将会继续蹲课: "+err.Error())
+			SendNotify(cfg, "查询失败", CourseName+"查询失败,将会继续蹲课: "+err.Error())
 			continue
 		}
 
@@ -52,13 +52,13 @@ func StartWaitCourse(ctx context.Context, c *client.Client, cfg *config.Config, 
 					waitCourseChannel <- "登录过期"
 					return
 				}
-				SendEmail(cfg, "蹲选课失败", CourseName+"选课失败,将会继续蹲课: "+err.Error())
+				SendNotify(cfg, "蹲选课失败", CourseName+"选课失败,将会继续蹲课: "+err.Error())
 				continue
 			}
 
 			log.Info(CourseName + "蹲选课成功")
 			// 发送邮件
-			SendEmail(cfg, "蹲选课成功", CourseName+"选课成功？(,请自行查看确认")
+			SendNotify(cfg, "蹲选课成功", CourseName+"选课成功？(,请自行查看确认")
 
 			// 将此CourseName设置为0
 			cfg.Course.Set(CourseName, "0")
@@ -68,14 +68,9 @@ func StartWaitCourse(ctx context.Context, c *client.Client, cfg *config.Config, 
 	}
 }
 
-// SendEmail 发送邮件
-func SendEmail(cfg *config.Config, subject string, body string) {
-	if cfg.SmtpEmail.Enabled == "1" {
-		err := util.SendEmail(cfg.SmtpEmail.Host, cfg.SmtpEmail.Username, cfg.SmtpEmail.Password, cfg.SmtpEmail.To, subject, body)
-		if err != nil {
-			log.Error("发送邮件失败: ", err)
-		}
-	}
+// SendNotify 发送通知（邮件/TG/Bark/Webhook）
+func SendNotify(cfg *config.Config, subject string, body string) {
+	notify.Notify(cfg, subject, body)
 }
 
 // GetIsCourseOk 检验是否有余量
@@ -187,7 +182,7 @@ func WaitCourse(ctx context.Context, channel chan string, c *client.Client, cfg 
 				if message == "登录过期" {
 					log.Error("登录过期")
 					cancel()
-					SendEmail(cfg, "登录过期", "登录过期,自动重新登录")
+					SendNotify(cfg, "登录过期", "登录过期,自动重新登录")
 					close(waitCourseChannel)
 
 					log.Info("重新登录...")
@@ -195,7 +190,7 @@ func WaitCourse(ctx context.Context, channel chan string, c *client.Client, cfg 
 					c, err = login.Login(cfg)
 					if err != nil {
 						log.Error("登录失败...")
-						SendEmail(cfg, "登录失败", "登录失败,程序停止,请检查")
+						SendNotify(cfg, "登录失败", "登录失败,程序停止,请检查")
 						return
 					}
 					break outerLoop
