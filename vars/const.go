@@ -12,5 +12,8 @@ var (
 	}
 )
 
+// UserAgent 全局默认 UA（每个请求都会带上；若调用方显式传入 User-Agent 头则会覆盖该值）
+const UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36"
+
 // Version 当前版本
 const Version = "v1.4.7"

@@ -52,6 +52,9 @@ func (c *Client) Get(url string, headers map[string]string) ([]byte, int, error)
 		return nil, 0, err
 	}
 
+	// 默认 UA（若调用方显式传入 User-Agent 则会覆盖）
+	req.Header.Set("User-Agent", vars.UserAgent)
+
 	// 添加请求头
 	for key, value := range headers {
 		req.Header.Set(key, value)
@@ -85,6 +88,9 @@ func (c *Client) Post(url string, formData string, headers map[string]string) ([
 	if err != nil {
 		return nil, 0, err
 	}
+
+	// 默认 UA（若调用方显式传入 User-Agent 则会覆盖）
+	req.Header.Set("User-Agent", vars.UserAgent)
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
 	// 添加请求头
