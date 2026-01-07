@@ -216,6 +216,94 @@
                 </div>
 
                 <hr style="border: 1px solid #ccc; margin: 20px 0;">
+
+                <div class="form-group" style="display: flex; align-items: center; justify-content: space-between;">
+                    <h1 style="margin: 0;">Telegram 推送配置</h1>
+                    <label for="telegramEnabled" style="margin: 0;">
+                        <input type="checkbox" id="telegramEnabled" name="telegramEnabled" onclick="toggleTelegramVisibility()">
+                        启用 Telegram
+                    </label>
+                </div>
+                <div class="form-group" id="telegramGroup" style="display: none;">
+                    <div class="form-group">
+                        <label for="telegramBotToken">Bot Token</label>
+                        <input type="text" id="telegramBotToken" name="telegramBotToken" value="">
+                    </div>
+                    <div class="form-group">
+                        <label for="telegramChatId">Chat ID</label>
+                        <input type="text" id="telegramChatId" name="telegramChatId" value="">
+                    </div>
+                    <div class="form-group">
+                        <label for="telegramApiBase">API Base（可选）</label>
+                        <input type="text" id="telegramApiBase" name="telegramApiBase" value="https://api.telegram.org">
+                    </div>
+                </div>
+
+                <hr style="border: 1px solid #ccc; margin: 20px 0;">
+
+                <div class="form-group" style="display: flex; align-items: center; justify-content: space-between;">
+                    <h1 style="margin: 0;">Bark 推送配置</h1>
+                    <label for="barkEnabled" style="margin: 0;">
+                        <input type="checkbox" id="barkEnabled" name="barkEnabled" onclick="toggleBarkVisibility()">
+                        启用 Bark
+                    </label>
+                </div>
+                <div class="form-group" id="barkGroup" style="display: none;">
+                    <div class="form-group">
+                        <label for="barkServer">Server（可选）</label>
+                        <input type="text" id="barkServer" name="barkServer" value="https://api.day.app">
+                    </div>
+                    <div class="form-group">
+                        <label for="barkKey">Key</label>
+                        <input type="text" id="barkKey" name="barkKey" value="">
+                    </div>
+                    <div class="form-group">
+                        <label for="barkSound">Sound（可选）</label>
+                        <input type="text" id="barkSound" name="barkSound" value="">
+                    </div>
+                    <div class="form-group">
+                        <label for="barkGroupName">Group（可选）</label>
+                        <input type="text" id="barkGroupName" name="barkGroupName" value="">
+                    </div>
+                    <div class="form-group">
+                        <label for="barkUrl">URL（可选）</label>
+                        <input type="text" id="barkUrl" name="barkUrl" value="">
+                    </div>
+                    <div class="form-group">
+                        <label for="barkIcon">Icon（可选）</label>
+                        <input type="text" id="barkIcon" name="barkIcon" value="">
+                    </div>
+                </div>
+
+                <hr style="border: 1px solid #ccc; margin: 20px 0;">
+
+                <div class="form-group" style="display: flex; align-items: center; justify-content: space-between;">
+                    <h1 style="margin: 0;">Webhook 推送配置</h1>
+                    <label for="webhookEnabled" style="margin: 0;">
+                        <input type="checkbox" id="webhookEnabled" name="webhookEnabled" onclick="toggleWebhookVisibility()">
+                        启用 Webhook
+                    </label>
+                </div>
+                <div class="form-group" id="webhookGroup" style="display: none;">
+                    <div class="form-group">
+                        <label for="webhookUrl">URL</label>
+                        <input type="text" id="webhookUrl" name="webhookUrl" value="">
+                    </div>
+                    <div class="form-group">
+                        <label for="webhookMethod">Method（默认 POST）</label>
+                        <input type="text" id="webhookMethod" name="webhookMethod" value="POST">
+                    </div>
+                    <div class="form-group">
+                        <label for="webhookHeaders">Headers（JSON，可选）</label>
+                        <textarea id="webhookHeaders" name="webhookHeaders" rows="4" style="width: 100%;">{}</textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="webhookBodyTemplate">Body Template（支持 {{.Title}}/{{.Body}}/{{.Time}}）</label>
+                        <textarea id="webhookBodyTemplate" name="webhookBodyTemplate" rows="4" style="width: 100%;">{"title":"{{.Title}}","body":"{{.Body}}"}</textarea>
+                    </div>
+                </div>
+
+                <hr style="border: 1px solid #ccc; margin: 20px 0;">
             </div>
 
             <div class="form-group" id="startTimeGroup" style="display: block;">
@@ -311,6 +399,27 @@
             smtpGroup.style.display = smtpEnabled.checked ? 'block' : 'none';
         }
 
+        // Telegram 配置 显示或隐藏
+        function toggleTelegramVisibility() {
+            const telegramEnabled = document.getElementById('telegramEnabled');
+            const telegramGroup = document.getElementById('telegramGroup');
+            telegramGroup.style.display = telegramEnabled.checked ? 'block' : 'none';
+        }
+
+        // Bark 配置 显示或隐藏
+        function toggleBarkVisibility() {
+            const barkEnabled = document.getElementById('barkEnabled');
+            const barkGroup = document.getElementById('barkGroup');
+            barkGroup.style.display = barkEnabled.checked ? 'block' : 'none';
+        }
+
+        // Webhook 配置 显示或隐藏
+        function toggleWebhookVisibility() {
+            const webhookEnabled = document.getElementById('webhookEnabled');
+            const webhookGroup = document.getElementById('webhookGroup');
+            webhookGroup.style.display = webhookEnabled.checked ? 'block' : 'none';
+        }
+
         // 提交配置
         function submitConfig() {
             const courseRows = document.querySelectorAll('.course-row');
@@ -358,6 +467,36 @@
                     password: document.getElementById('smtpPassword').value,
                     to: document.getElementById('smtpTo').value,
                     enabled: document.getElementById('smtpEnabled').checked ? "1" : "0"
+                },
+                telegram: {
+                    bot_token: document.getElementById('telegramBotToken').value,
+                    chat_id: document.getElementById('telegramChatId').value,
+                    api_base: document.getElementById('telegramApiBase').value,
+                    enabled: document.getElementById('telegramEnabled').checked ? "1" : "0"
+                },
+                bark: {
+                    server: document.getElementById('barkServer').value,
+                    key: document.getElementById('barkKey').value,
+                    sound: document.getElementById('barkSound').value,
+                    group: document.getElementById('barkGroupName').value,
+                    url: document.getElementById('barkUrl').value,
+                    icon: document.getElementById('barkIcon').value,
+                    enabled: document.getElementById('barkEnabled').checked ? "1" : "0"
+                },
+                webhook: {
+                    url: document.getElementById('webhookUrl').value,
+                    method: document.getElementById('webhookMethod').value,
+                    headers: (() => {
+                        const raw = document.getElementById('webhookHeaders').value || '{}';
+                        try {
+                            return JSON.parse(raw);
+                        } catch (e) {
+                            alert('Webhook Headers 不是合法 JSON');
+                            throw e;
+                        }
+                    })(),
+                    body_template: document.getElementById('webhookBodyTemplate').value,
+                    enabled: document.getElementById('webhookEnabled').checked ? "1" : "0"
                 },
                 start_time: document.getElementById('startTime').value
             };
@@ -450,6 +589,28 @@
                 document.getElementById('smtpTo').value = config.smtp_email.to || '';
                 document.getElementById('smtpEnabled').checked = config.smtp_email.enabled === "1";
 
+                // 填充 Telegram 数据
+                document.getElementById('telegramBotToken').value = (config.telegram && config.telegram.bot_token) || '';
+                document.getElementById('telegramChatId').value = (config.telegram && config.telegram.chat_id) || '';
+                document.getElementById('telegramApiBase').value = (config.telegram && config.telegram.api_base) || 'https://api.telegram.org';
+                document.getElementById('telegramEnabled').checked = (config.telegram && config.telegram.enabled) === "1";
+
+                // 填充 Bark 数据
+                document.getElementById('barkServer').value = (config.bark && config.bark.server) || 'https://api.day.app';
+                document.getElementById('barkKey').value = (config.bark && config.bark.key) || '';
+                document.getElementById('barkSound').value = (config.bark && config.bark.sound) || '';
+                document.getElementById('barkGroupName').value = (config.bark && config.bark.group) || '';
+                document.getElementById('barkUrl').value = (config.bark && config.bark.url) || '';
+                document.getElementById('barkIcon').value = (config.bark && config.bark.icon) || '';
+                document.getElementById('barkEnabled').checked = (config.bark && config.bark.enabled) === "1";
+
+                // 填充 Webhook 数据
+                document.getElementById('webhookUrl').value = (config.webhook && config.webhook.url) || '';
+                document.getElementById('webhookMethod').value = (config.webhook && config.webhook.method) || 'POST';
+                document.getElementById('webhookHeaders').value = JSON.stringify((config.webhook && config.webhook.headers) || {}, null, 2);
+                document.getElementById('webhookBodyTemplate').value = (config.webhook && config.webhook.body_template) || '{"title":"{{.Title}}","body":"{{.Body}}"}';
+                document.getElementById('webhookEnabled').checked = (config.webhook && config.webhook.enabled) === "1";
+
                 // 填充开始时间数据
                 document.getElementById('startTime').value = config.start_time || '';
 
@@ -458,6 +619,9 @@
                 toggleCookiesVisibility();
                 toggleIntervalVisibility();
                 toggleSmtpVisibility();
+                toggleTelegramVisibility();
+                toggleBarkVisibility();
+                toggleWebhookVisibility();
             })
             .catch(error => {
                 console.error('获取配置失败:', error);
