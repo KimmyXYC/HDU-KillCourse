@@ -60,5 +60,9 @@
         "body_template": "{\"title\":\"{{.Title}}\",\"body\":\"{{.Body}}\"}",
         "enabled": "0"
     },
+    "web": {
+        "host": "127.0.0.1",
+        "port": 6688
+    },
     "start_time": "2024-07-25 12:00:00"
 }

@@ -56,13 +56,19 @@ type WebConfig struct {
 }
 
 func StartWebServer() {
-	// 初始端口号
-	port := 6688
-	// 检查端口是否被占用
+	// 读取配置（若配置缺失，会在 LoadConfig 内应用默认值）
+	loadedCfg, err := config.LoadConfig()
+	if err != nil {
+		log.Error("无法读取配置文件，使用默认 Web 监听配置: ", err)
+		loadedCfg = &config.Config{Web: config.WebConfig{Host: "127.0.0.1", Port: 6688}}
+	}
+	host := loadedCfg.Web.Host
+	port := loadedCfg.Web.Port
+
+	// 检查端口是否被占用（在指定 host 上探测），如占用则递增
 	for {
-		listener, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
+		listener, err := net.Listen("tcp", fmt.Sprintf("%s:%d", host, port))
 		if err == nil {
-			// 如果端口未被占用，关闭监听器并继续启动服务器
 			listener.Close()
 			break
 		}
@@ -146,8 +152,8 @@ func StartWebServer() {
 		w.Write([]byte("配置保存成功"))
 	})
 
-	log.Info("访问该地址编辑配置: http://localhost:" + fmt.Sprintf("%d", port))
-	err := http.ListenAndServe(fmt.Sprintf(":%d", port), nil)
+	log.Info("访问该地址编辑配置: http://" + host + ":" + fmt.Sprintf("%d", port))
+	err = http.ListenAndServe(fmt.Sprintf("%s:%d", host, port), nil)
 	if err != nil {
 		log.Error("Web服务器启动失败: ", err)
 		return

@@ -21,9 +21,26 @@ type Config struct {
 	Telegram                `json:"telegram"`
 	Bark                    `json:"bark"`
 	Webhook                 `json:"webhook"`
-	StartTime               string `json:"start_time"`
-	ClientBodyConfigEnabled string `json:"ClientBodyConfigEnabled,omitempty"`
-	CrossGradeEnabled       string `json:"CrossGradeEnabled,omitempty"`
+	Web                     WebConfig `json:"web,omitempty"`
+	StartTime               string    `json:"start_time"`
+	ClientBodyConfigEnabled string    `json:"ClientBodyConfigEnabled,omitempty"`
+	CrossGradeEnabled       string    `json:"CrossGradeEnabled,omitempty"`
+}
+
+// WebConfig Web 编辑页面服务配置
+type WebConfig struct {
+	Host string `json:"host"`
+	Port int    `json:"port"`
+}
+
+func applyDefaults(cfg *Config) {
+	// Web
+	if cfg.Web.Host == "" {
+		cfg.Web.Host = "127.0.0.1"
+	}
+	if cfg.Web.Port == 0 {
+		cfg.Web.Port = 6688
+	}
 }
 
 // CasLogin CAS 登录配置
@@ -109,6 +126,7 @@ func InitCfg() (*Config, error) {
 	if err := json.Unmarshal(bytes, &cfg); err != nil {
 		return nil, err
 	}
+	applyDefaults(&cfg)
 
 	// 验证配置文件
 	if err := cfg.Validate(); err != nil {
@@ -179,6 +197,10 @@ var DefaultConfig = `{
         "body_template": "{\"title\":\"{{.Title}}\",\"body\":\"{{.Body}}\"}",
         "enabled": "0"
     },
+    "web": {
+        "host": "127.0.0.1",
+        "port": 6688
+    },
     "start_time": "2024-07-25 12:00:00"
 }`
 
@@ -198,6 +220,7 @@ func LoadConfig() (*Config, error) {
 		log.Error("解析配置文件失败: ", err)
 		return nil, err
 	}
+	applyDefaults(&cfg)
 	return &cfg, nil
 }
 
