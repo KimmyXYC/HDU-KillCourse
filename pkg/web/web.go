@@ -1,6 +1,7 @@
 package web
 
 import (
+	"crypto/subtle"
 	"embed"
 	"encoding/json"
 	"fmt"
@@ -17,6 +18,34 @@ var htmlFile embed.FS
 
 var cfg *config.Config
 var webCfg WebConfig
+
+func webAuthEnabled(web config.WebConfig) (bool, string, string) {
+	if web.Auth.Enabled != "1" {
+		return false, "", ""
+	}
+	// 若开启但用户名或密码为空：视为未开启
+	if web.Auth.Username == "" || web.Auth.Password == "" {
+		return false, "", ""
+	}
+	return true, web.Auth.Username, web.Auth.Password
+}
+
+func basicAuthWrap(web config.WebConfig, next http.HandlerFunc) http.HandlerFunc {
+	enabled, username, password := webAuthEnabled(web)
+	if !enabled {
+		return next
+	}
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		u, p, ok := r.BasicAuth()
+		if !ok || subtle.ConstantTimeCompare([]byte(u), []byte(username)) != 1 || subtle.ConstantTimeCompare([]byte(p), []byte(password)) != 1 {
+			w.Header().Set("WWW-Authenticate", `Basic realm="HDU-KillCourse"`)
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			return
+		}
+		next(w, r)
+	}
+}
 
 // 将 OrderedMap 转化为二维数组列表
 func orderedMapToArrayList(omap *orderedmap.OrderedMap) [][]string {
@@ -52,6 +81,7 @@ type WebConfig struct {
 	Telegram   config.Telegram   `json:"telegram"`
 	Bark       config.Bark       `json:"bark"`
 	Webhook    config.Webhook    `json:"webhook"`
+	Web        config.WebConfig  `json:"web"`
 	StartTime  string            `json:"start_time"`
 }
 
@@ -76,8 +106,13 @@ func StartWebServer() {
 	}
 
 	// 设置路由
+	mux := http.NewServeMux()
+	wrap := func(h http.HandlerFunc) http.HandlerFunc {
+		return basicAuthWrap(loadedCfg.Web, h)
+	}
+
 	// 提供 HTML 页面
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/", wrap(func(w http.ResponseWriter, r *http.Request) {
 		data, err := htmlFile.ReadFile("main.html")
 		if err != nil {
 			http.Error(w, "无法加载页面", http.StatusInternalServerError)
@@ -85,10 +120,10 @@ func StartWebServer() {
 		}
 		w.Header().Set("Content-Type", "text/html")
 		w.Write(data)
-	})
+	}))
 
 	// 获取配置
-	http.HandleFunc("/getConfig", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/getConfig", wrap(func(w http.ResponseWriter, r *http.Request) {
 		var err error
 		cfg, err = config.LoadConfig()
 		if err != nil {
@@ -109,14 +144,15 @@ func StartWebServer() {
 			Telegram:   cfg.Telegram,
 			Bark:       cfg.Bark,
 			Webhook:    cfg.Webhook,
+			Web:        cfg.Web,
 			StartTime:  cfg.StartTime,
 		}
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(webCfg)
-	})
+	}))
 
 	// 保存配置
-	http.HandleFunc("/saveConfig", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/saveConfig", wrap(func(w http.ResponseWriter, r *http.Request) {
 		err := json.NewDecoder(r.Body).Decode(&webCfg)
 		if err != nil {
 			http.Error(w, "无法解析配置: "+err.Error(), http.StatusBadRequest)
@@ -135,6 +171,7 @@ func StartWebServer() {
 		cfg.Telegram = webCfg.Telegram
 		cfg.Bark = webCfg.Bark
 		cfg.Webhook = webCfg.Webhook
+		cfg.Web = webCfg.Web
 		cfg.StartTime = webCfg.StartTime
 		// 验证配置
 		err = cfg.Validate()
@@ -150,10 +187,10 @@ func StartWebServer() {
 		}
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("配置保存成功"))
-	})
+	}))
 
 	log.Info("访问该地址编辑配置: http://" + host + ":" + fmt.Sprintf("%d", port))
-	err = http.ListenAndServe(fmt.Sprintf("%s:%d", host, port), nil)
+	err = http.ListenAndServe(fmt.Sprintf("%s:%d", host, port), mux)
 	if err != nil {
 		log.Error("Web服务器启动失败: ", err)
 		return

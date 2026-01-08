@@ -37,6 +37,10 @@ go build
 
 - click 可执行文件
 - 默认访问 http://127.0.0.1:6688 ，即可进入配置页面（监听地址与端口可在 `config.json` 的 `web.host`/`web.port` 中配置）。
+- Web 配置页已增加 Basic Auth（默认账号 `admin`，默认密码 `password`），可在 `config.json` 的 `web.auth` 中修改。
+  - `web.auth.enabled`：是否开启（默认 `1`）
+  - `web.auth.username` / `web.auth.password`：账号/密码
+  - 若 `enabled=1` 但账号或密码为空：视为未开启
 
 ![Web编辑配置](./Doc/img/webEdit.png)
 

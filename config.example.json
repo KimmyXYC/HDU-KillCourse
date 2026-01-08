@@ -62,7 +62,12 @@
     },
     "web": {
         "host": "127.0.0.1",
-        "port": 6688
+        "port": 6688,
+        "auth": {
+            "enabled": "1",
+            "username": "admin",
+            "password": "password"
+        }
     },
     "start_time": "2024-07-25 12:00:00"
 }
