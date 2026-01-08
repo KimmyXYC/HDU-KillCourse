@@ -36,7 +36,7 @@ go build
 `Web编辑配置`
 
 - click 可执行文件
-- 访问 http://localhost:6688 (默认端口) ，即可进入配置页面。
+- 默认访问 http://127.0.0.1:6688 ，即可进入配置页面（监听地址与端口可在 `config.json` 的 `web.host`/`web.port` 中配置）。
 
 ![Web编辑配置](./Doc/img/webEdit.png)
 
