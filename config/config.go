@@ -29,8 +29,16 @@ type Config struct {
 
 // WebConfig Web 编辑页面服务配置
 type WebConfig struct {
-	Host string `json:"host"`
-	Port int    `json:"port"`
+	Host string        `json:"host"`
+	Port int           `json:"port"`
+	Auth WebAuthConfig `json:"auth"`
+}
+
+// WebAuthConfig Web 编辑页面 Basic Auth 配置
+type WebAuthConfig struct {
+	Enabled  string `json:"enabled"`
+	Username string `json:"username"`
+	Password string `json:"password"`
 }
 
 func applyDefaults(cfg *Config) {
@@ -40,6 +48,18 @@ func applyDefaults(cfg *Config) {
 	}
 	if cfg.Web.Port == 0 {
 		cfg.Web.Port = 6688
+	}
+
+	// Web Basic Auth
+	// 仅在 enabled 字段缺失时应用默认用户名/密码，允许用户显式置空来达到“视为未开启”的效果。
+	if cfg.Web.Auth.Enabled == "" {
+		cfg.Web.Auth.Enabled = "1"
+		if cfg.Web.Auth.Username == "" {
+			cfg.Web.Auth.Username = "admin"
+		}
+		if cfg.Web.Auth.Password == "" {
+			cfg.Web.Auth.Password = "password"
+		}
 	}
 }
 
@@ -199,7 +219,12 @@ var DefaultConfig = `{
     },
     "web": {
         "host": "127.0.0.1",
-        "port": 6688
+        "port": 6688,
+        "auth": {
+            "enabled": "1",
+            "username": "admin",
+            "password": "password"
+        }
     },
     "start_time": "2024-07-25 12:00:00"
 }`
