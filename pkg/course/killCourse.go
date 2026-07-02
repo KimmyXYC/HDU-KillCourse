@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"os"
 	"strings"
 	"time"
@@ -12,6 +13,17 @@ import (
 	"github.com/cr4n5/HDU-KillCourse/config"
 	"github.com/cr4n5/HDU-KillCourse/log"
 )
+
+const killCourseRetryInterval = time.Second
+
+func waitKillCourseRetry(ctx context.Context) bool {
+	select {
+	case <-ctx.Done():
+		return false
+	case <-time.After(killCourseRetryInterval):
+		return true
+	}
+}
 
 // GetDoJxbId 获取doJxbId
 func GetDoJxbId(c *client.Client, KchId string, JxbId string, Kklxdm string, NjdmId string, XueNian string, Xqm string) (string, error) {
@@ -99,8 +111,10 @@ func SelectCourse(c *client.Client, JxbIds string, KchId string, Kklxdm string, 
 		log.Info("选课成功")
 	} else if result.Flag == "0" {
 		log.Error("选课失败: ", result.Msg)
+		return fmt.Errorf("选课失败: %s", result.Msg)
 	} else {
 		log.Error("选课失败: 人数可能已满", result)
+		return fmt.Errorf("选课失败: 人数可能已满，flag=%s msg=%s", result.Flag, result.Msg)
 	}
 
 	return nil
@@ -126,6 +140,7 @@ func CancelCourse(c *client.Client, JxbIds string, KchId string, XueNian string,
 		log.Info("退课成功(可能？)")
 	} else {
 		log.Error("退课失败：", result)
+		return fmt.Errorf("退课失败: %s", result)
 	}
 
 	return nil
@@ -238,6 +253,9 @@ func KillCourse(ctx context.Context, channel chan string, c *client.Client, cfg 
 						err = c.GetClientBodyConfig()
 						if err != nil {
 							log.Error("获取选课配置失败: ", err)
+							if !waitKillCourseRetry(ctx) {
+								return
+							}
 							continue
 						}
 					}
@@ -251,18 +269,45 @@ func KillCourse(ctx context.Context, channel chan string, c *client.Client, cfg 
 					}
 				}
 				log.Info("选课配置获取成功")
-				// 选退课
+
+				// 选退课。未成功的课程会保留在 pending 中循环重试，直到全部成功或上下文取消。
+				pending := make(map[string]interface{})
 				for _, k := range cfg.Course.Keys() {
 					v, _ := cfg.Course.Get(k)
-					// 处理课程
-					log.Info("----------------------------------------")
-					log.Info("正在处理课程: ", k)
-					err = HandleCourse(c, cfg, course, k, v)
-					if err != nil {
-						log.Error("处理课程失败: ", err)
-						continue
+					pending[k] = v
+				}
+
+				retryRound := 1
+				for len(pending) > 0 {
+					log.Info("开始第 ", retryRound, " 轮选退课，剩余课程数: ", len(pending))
+					for _, k := range cfg.Course.Keys() {
+						v, ok := pending[k]
+						if !ok {
+							continue
+						}
+
+						log.Info("----------------------------------------")
+						log.Info("正在处理课程: ", k)
+						err = HandleCourse(c, cfg, course, k, v)
+						if err != nil {
+							log.Error("处理课程失败，将继续重试: ", err)
+							continue
+						}
+
+						delete(pending, k)
+					}
+
+					if len(pending) == 0 {
+						break
+					}
+
+					retryRound++
+					log.Info("本轮仍有 ", len(pending), " 门课程未成功，", killCourseRetryInterval, " 后重试...")
+					if !waitKillCourseRetry(ctx) {
+						return
 					}
 				}
+
 				// 完成
 				channel <- "完成"
 				return
