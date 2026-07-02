@@ -14,17 +14,6 @@ import (
 	"github.com/cr4n5/HDU-KillCourse/log"
 )
 
-const killCourseRetryInterval = time.Second
-
-func waitKillCourseRetry(ctx context.Context) bool {
-	select {
-	case <-ctx.Done():
-		return false
-	case <-time.After(killCourseRetryInterval):
-		return true
-	}
-}
-
 // GetDoJxbId 获取doJxbId
 func GetDoJxbId(c *client.Client, KchId string, JxbId string, Kklxdm string, NjdmId string, XueNian string, Xqm string) (string, error) {
 	// 检查c.ClientBodyConfig是否为nil，测试用
@@ -253,9 +242,6 @@ func KillCourse(ctx context.Context, channel chan string, c *client.Client, cfg 
 						err = c.GetClientBodyConfig()
 						if err != nil {
 							log.Error("获取选课配置失败: ", err)
-							if !waitKillCourseRetry(ctx) {
-								return
-							}
 							continue
 						}
 					}
@@ -302,10 +288,7 @@ func KillCourse(ctx context.Context, channel chan string, c *client.Client, cfg 
 					}
 
 					retryRound++
-					log.Info("本轮仍有 ", len(pending), " 门课程未成功，", killCourseRetryInterval, " 后重试...")
-					if !waitKillCourseRetry(ctx) {
-						return
-					}
+					log.Info("本轮仍有 ", len(pending), " 门课程未成功，立即重试...")
 				}
 
 				// 完成
